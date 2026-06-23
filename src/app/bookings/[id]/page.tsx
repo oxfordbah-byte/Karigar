@@ -44,11 +44,16 @@ export default async function BookingDetailPage({
     .order("created_at", { ascending: true });
 
   const ITEM_LABELS: Record<string, string> = {
-    clothes: "Clothes",
-    shoes: "Shoes",
-    curtains: "Curtains",
-    bedsheets: "Bedsheets",
-    blankets: "Blankets",
+    shirt: "Shirt",
+    pant: "Pant / Trouser",
+    kurta: "Kurta / Shalwar Kameez",
+    saree: "Saree",
+    jacket: "Jacket / Coat",
+    bedsheet: "Bedsheet",
+    blanket: "Blanket / Quilt",
+    curtain: "Curtain",
+    shoe: "Shoes",
+    towel: "Towel",
     other: "Other",
   };
 

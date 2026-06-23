@@ -15,13 +15,13 @@ export default async function Home() {
       <section className="bg-[#d21f3c] text-white">
         <div className="mx-auto max-w-5xl px-4 py-16 text-center">
           <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
-            Laundry Wash & Ironing, Picked Up & Dropped Off
+            Karigar — Your Home Services Directory
           </h1>
-          <p className="mt-3 text-white/90 max-w-xl mx-auto">
-            We collect your clothes, shoes, curtains, bedsheets & blankets,
-            wash and iron them, and bring them right back to your door.
-            More home services are on the way.
-          </p>
+          <div className="mt-3 text-white/90 max-w-xl mx-auto space-y-1">
+            <p>Find trusted, verified professionals for everything your home needs.</p>
+            <p>We&apos;re starting with laundry pickup &amp; drop-off — fast, reliable, and affordable.</p>
+            <p>More home services are launching soon, all in one place.</p>
+          </div>
         </div>
       </section>
 

@@ -58,11 +58,16 @@ export async function signOut() {
 }
 
 const VALID_ITEM_TYPES = new Set([
-  "clothes",
-  "shoes",
-  "curtains",
-  "bedsheets",
-  "blankets",
+  "shirt",
+  "pant",
+  "kurta",
+  "saree",
+  "jacket",
+  "bedsheet",
+  "blanket",
+  "curtain",
+  "shoe",
+  "towel",
   "other",
 ]);
 

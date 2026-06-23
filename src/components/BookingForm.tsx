@@ -4,11 +4,16 @@ import { useActionState, useState } from "react";
 import { createBooking, type ActionResult } from "@/app/actions";
 
 const ITEM_TYPES: { value: string; label: string }[] = [
-  { value: "clothes", label: "Clothes" },
-  { value: "shoes", label: "Shoes" },
-  { value: "curtains", label: "Curtains" },
-  { value: "bedsheets", label: "Bedsheets" },
-  { value: "blankets", label: "Blankets" },
+  { value: "shirt", label: "Shirt" },
+  { value: "pant", label: "Pant / Trouser" },
+  { value: "kurta", label: "Kurta / Shalwar Kameez" },
+  { value: "saree", label: "Saree" },
+  { value: "jacket", label: "Jacket / Coat" },
+  { value: "bedsheet", label: "Bedsheet" },
+  { value: "blanket", label: "Blanket / Quilt" },
+  { value: "curtain", label: "Curtain" },
+  { value: "shoe", label: "Shoes" },
+  { value: "towel", label: "Towel" },
   { value: "other", label: "Other" },
 ];
 
@@ -32,7 +37,7 @@ export default function BookingForm({
   const [timing, setTiming] = useState<"instant" | "scheduled">("instant");
   const isLaundry = categorySlug === "laundry-ironing";
   const [items, setItems] = useState<LaundryItem[]>([
-    { item_type: "clothes", quantity: 1 },
+    { item_type: "shirt", quantity: 1 },
   ]);
 
   function updateItem(index: number, patch: Partial<LaundryItem>) {
@@ -42,7 +47,7 @@ export default function BookingForm({
   }
 
   function addItemRow() {
-    setItems((prev) => [...prev, { item_type: "clothes", quantity: 1 }]);
+    setItems((prev) => [...prev, { item_type: "shirt", quantity: 1 }]);
   }
 
   function removeItemRow(index: number) {
