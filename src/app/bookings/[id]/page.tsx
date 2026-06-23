@@ -37,6 +37,21 @@ export default async function BookingDetailPage({
     .eq("booking_id", id)
     .order("created_at", { ascending: true });
 
+  const { data: items } = await supabase
+    .from("booking_items")
+    .select("item_type, quantity")
+    .eq("booking_id", id)
+    .order("created_at", { ascending: true });
+
+  const ITEM_LABELS: Record<string, string> = {
+    clothes: "Clothes",
+    shoes: "Shoes",
+    curtains: "Curtains",
+    bedsheets: "Bedsheets",
+    blankets: "Blankets",
+    other: "Other",
+  };
+
   const provider = Array.isArray(booking.providers)
     ? booking.providers[0]
     : booking.providers;
@@ -68,13 +83,13 @@ export default async function BookingDetailPage({
             <div key={step} className="flex-1 flex items-center">
               <div
                 className={`h-2.5 w-2.5 rounded-full ${
-                  i <= currentStepIndex ? "bg-black" : "bg-neutral-200"
+                  i <= currentStepIndex ? "bg-[#d21f3c]" : "bg-neutral-200"
                 }`}
               />
               {i < STEPS.length - 1 && (
                 <div
                   className={`flex-1 h-0.5 ${
-                    i < currentStepIndex ? "bg-black" : "bg-neutral-200"
+                    i < currentStepIndex ? "bg-[#d21f3c]" : "bg-neutral-200"
                   }`}
                 />
               )}
@@ -115,6 +130,14 @@ export default async function BookingDetailPage({
           <span className="text-neutral-500">Booked on: </span>
           {new Date(booking.created_at).toLocaleString()}
         </div>
+        {items && items.length > 0 && (
+          <div>
+            <span className="text-neutral-500">Items: </span>
+            {items
+              .map((it) => `${it.quantity}x ${ITEM_LABELS[it.item_type] ?? it.item_type}`)
+              .join(", ")}
+          </div>
+        )}
       </div>
 
       <h2 className="font-semibold mt-6 mb-2">Status timeline</h2>

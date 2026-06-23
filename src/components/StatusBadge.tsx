@@ -16,8 +16,8 @@ export default function StatusBadge({ status }: { status: string }) {
         isCancelled
           ? "border-neutral-300 text-neutral-400 bg-neutral-50"
           : isCompleted
-          ? "border-black bg-black text-white"
-          : "border-black text-black bg-white"
+          ? "border-[#d21f3c] bg-[#d21f3c] text-white"
+          : "border-[#d21f3c] text-[#d21f3c] bg-white"
       }`}
     >
       {LABELS[status] ?? status}

@@ -57,6 +57,15 @@ export async function signOut() {
   redirect("/");
 }
 
+const VALID_ITEM_TYPES = new Set([
+  "clothes",
+  "shoes",
+  "curtains",
+  "bedsheets",
+  "blankets",
+  "other",
+]);
+
 export async function createBooking(
   _prevState: ActionResult,
   formData: FormData
@@ -77,6 +86,7 @@ export async function createBooking(
   const priceEstimate = formData.get("price_estimate")
     ? Number(formData.get("price_estimate"))
     : null;
+  const laundryItemsRaw = formData.get("laundry_items");
 
   if (!address.trim()) {
     return { error: "Address is required." };
@@ -86,6 +96,32 @@ export async function createBooking(
 
   if (!isInstant && !scheduledAt) {
     return { error: "Please choose a date & time for scheduled booking." };
+  }
+
+  let laundryItems: { item_type: string; quantity: number }[] = [];
+  if (laundryItemsRaw) {
+    try {
+      const parsed = JSON.parse(String(laundryItemsRaw));
+      if (Array.isArray(parsed)) {
+        laundryItems = parsed
+          .filter(
+            (it) =>
+              it &&
+              VALID_ITEM_TYPES.has(it.item_type) &&
+              Number(it.quantity) > 0
+          )
+          .map((it) => ({
+            item_type: String(it.item_type),
+            quantity: Math.floor(Number(it.quantity)),
+          }));
+      }
+    } catch {
+      // ignore malformed payload, treated as no items below
+    }
+
+    if (laundryItems.length === 0) {
+      return { error: "Please add at least one laundry item." };
+    }
   }
 
   const { data: booking, error } = await supabase
@@ -106,6 +142,19 @@ export async function createBooking(
 
   if (error) {
     return { error: error.message };
+  }
+
+  if (laundryItems.length > 0) {
+    const { error: itemsError } = await supabase.from("booking_items").insert(
+      laundryItems.map((it) => ({
+        booking_id: booking.id,
+        item_type: it.item_type,
+        quantity: it.quantity,
+      }))
+    );
+    if (itemsError) {
+      return { error: itemsError.message };
+    }
   }
 
   revalidatePath("/bookings");

@@ -29,6 +29,14 @@ export default async function BookProviderPage({
     notFound();
   }
 
+  const resolvedCategoryId = categoryId ?? provider.category_id;
+
+  const { data: category } = await supabase
+    .from("service_categories")
+    .select("slug")
+    .eq("id", resolvedCategoryId)
+    .single();
+
   return (
     <div className="mx-auto max-w-md px-4 py-8">
       <Link href="/" className="text-sm text-neutral-500 hover:underline">
@@ -42,7 +50,8 @@ export default async function BookProviderPage({
       <div className="mt-6">
         <BookingForm
           providerId={provider.id}
-          categoryId={categoryId ?? provider.category_id}
+          categoryId={resolvedCategoryId}
+          categorySlug={category?.slug ?? null}
           priceEstimate={provider.starting_price}
         />
       </div>

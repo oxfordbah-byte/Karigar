@@ -33,7 +33,7 @@ export default async function BookingsPage() {
             <Link
               key={b.id}
               href={`/bookings/${b.id}`}
-              className="card p-4 flex items-center justify-between gap-4 hover:border-black transition-colors"
+              className="card p-4 flex items-center justify-between gap-4 hover:border-[#d21f3c] transition-colors"
             >
               <div>
                 <div className="font-semibold">
