@@ -88,10 +88,16 @@ export async function createBooking(
   const notes = String(formData.get("notes") || "");
   const timing = String(formData.get("timing") || "instant");
   const scheduledAt = String(formData.get("scheduled_at") || "");
-  const priceEstimate = formData.get("price_estimate")
+  const clientPriceEstimate = formData.get("price_estimate")
     ? Number(formData.get("price_estimate"))
     : null;
   const laundryItemsRaw = formData.get("laundry_items");
+  const paymentMethodRaw = String(formData.get("payment_method") || "cod");
+  const paymentMethod = paymentMethodRaw === "online" ? "online" : "cod";
+
+  if (paymentMethod === "online") {
+    return { error: "Online payment isn't available yet — please use Cash on Delivery." };
+  }
 
   if (!address.trim()) {
     return { error: "Address is required." };
@@ -129,6 +135,25 @@ export async function createBooking(
     }
   }
 
+  // Recompute the total server-side from the authoritative price list —
+  // never trust a client-submitted total.
+  let priceEstimate = clientPriceEstimate;
+  if (laundryItems.length > 0) {
+    const { data: priceRows, error: priceError } = await supabase
+      .from("laundry_item_prices")
+      .select("item_type, price_pkr");
+    if (priceError) {
+      return { error: priceError.message };
+    }
+    const priceMap = new Map(
+      (priceRows ?? []).map((p) => [p.item_type, p.price_pkr])
+    );
+    priceEstimate = laundryItems.reduce(
+      (sum, it) => sum + (priceMap.get(it.item_type) ?? 0) * it.quantity,
+      0
+    );
+  }
+
   const { data: booking, error } = await supabase
     .from("bookings")
     .insert({
@@ -140,6 +165,7 @@ export async function createBooking(
       is_instant: isInstant,
       scheduled_at: isInstant ? null : new Date(scheduledAt).toISOString(),
       price_estimate: priceEstimate,
+      payment_method: paymentMethod,
       status: "pending",
     })
     .select("id")

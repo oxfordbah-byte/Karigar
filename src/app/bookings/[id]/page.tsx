@@ -22,7 +22,7 @@ export default async function BookingDetailPage({
   const { data: booking } = await supabase
     .from("bookings")
     .select(
-      "id, status, is_instant, scheduled_at, address, notes, price_estimate, created_at, providers(full_name, phone), service_categories(name)"
+      "id, status, is_instant, scheduled_at, address, notes, price_estimate, payment_method, created_at, providers(full_name, phone), service_categories(name)"
     )
     .eq("id", id)
     .single();
@@ -127,8 +127,14 @@ export default async function BookingDetailPage({
         )}
         {booking.price_estimate && (
           <div>
-            <span className="text-neutral-500">Estimated price: </span>
+            <span className="text-neutral-500">Total: </span>
             PKR {booking.price_estimate}
+          </div>
+        )}
+        {booking.payment_method && (
+          <div>
+            <span className="text-neutral-500">Payment: </span>
+            {booking.payment_method === "cod" ? "Cash on Delivery" : "Online"}
           </div>
         )}
         <div>

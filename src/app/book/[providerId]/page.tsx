@@ -37,6 +37,16 @@ export default async function BookProviderPage({
     .eq("id", resolvedCategoryId)
     .single();
 
+  let itemPrices: Record<string, number> = {};
+  if (category?.slug === "laundry-ironing") {
+    const { data: prices } = await supabase
+      .from("laundry_item_prices")
+      .select("item_type, price_pkr");
+    itemPrices = Object.fromEntries(
+      (prices ?? []).map((p) => [p.item_type, p.price_pkr])
+    );
+  }
+
   return (
     <div className="mx-auto max-w-md px-4 py-8">
       <Link href="/" className="text-sm text-neutral-500 hover:underline">
@@ -53,6 +63,7 @@ export default async function BookProviderPage({
           categoryId={resolvedCategoryId}
           categorySlug={category?.slug ?? null}
           priceEstimate={provider.starting_price}
+          itemPrices={itemPrices}
         />
       </div>
     </div>
