@@ -277,3 +277,20 @@ export async function submitReview(
   revalidatePath(`/bookings/${bookingId}`);
   return { success: true };
 }
+
+export async function confirmDelivery(bookingId: string) {
+  const supabase = await createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) {
+    redirect("/login");
+  }
+
+  await supabase
+    .from("bookings")
+    .update({ customer_confirmed_at: new Date().toISOString() })
+    .eq("id", bookingId)
+    .eq("customer_id", userData.user.id)
+    .eq("status", "delivered");
+
+  revalidatePath(`/bookings/${bookingId}`);
+}

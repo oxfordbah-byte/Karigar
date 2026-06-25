@@ -192,6 +192,7 @@ export async function markDelivered(formData: FormData) {
     .from("bookings")
     .update({
       status: "delivered",
+      delivered_at: new Date().toISOString(),
       payment_status: booking.payment_method === "cod" ? "paid" : "pending",
     })
     .eq("id", bookingId)

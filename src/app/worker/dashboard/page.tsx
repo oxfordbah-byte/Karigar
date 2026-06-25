@@ -28,6 +28,8 @@ type BookingRow = {
   price_estimate: number | null;
   payment_method: string;
   payment_status: string;
+  delivered_at: string | null;
+  customer_confirmed_at: string | null;
   created_at: string;
   customer: { full_name: string | null; phone: string | null } | null;
   category: { name: string } | null;
@@ -221,7 +223,28 @@ function BookingCard({ booking }: { booking: BookingRow }) {
   );
 }
 
-export default async function WorkerDashboardPage() {
+const IST_OFFSET = "+05:30";
+
+function istDayRange(dateStr: string) {
+  const start = new Date(`${dateStr}T00:00:00${IST_OFFSET}`);
+  const end = new Date(start.getTime() + 24 * 60 * 60 * 1000);
+  return { start, end };
+}
+
+function todayIST(): string {
+  // Render "today" in IST regardless of server timezone.
+  const now = new Date();
+  const ist = new Date(now.getTime() + (5.5 * 60 + now.getTimezoneOffset()) * 60 * 1000);
+  return ist.toISOString().slice(0, 10);
+}
+
+export default async function WorkerDashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ date?: string }>;
+}) {
+  const { date } = await searchParams;
+  const selectedDate = date && /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : todayIST();
   const supabase = await createClient();
 
   const { data: userData } = await supabase.auth.getUser();
@@ -242,7 +265,7 @@ export default async function WorkerDashboardPage() {
   const { data: bookings } = await supabase
     .from("bookings")
     .select(
-      `id, status, is_instant, scheduled_at, address, notes, price_estimate, payment_method, payment_status, created_at,
+      `id, status, is_instant, scheduled_at, address, notes, price_estimate, payment_method, payment_status, delivered_at, customer_confirmed_at, created_at,
        customer:profiles(full_name, phone),
        category:service_categories(name),
        booking_items(item_type, quantity)`
@@ -253,12 +276,31 @@ export default async function WorkerDashboardPage() {
 
   const rows = bookings ?? [];
   const pending = rows.filter((b) => b.status === "pending");
+  const collectedCount = rows.filter((b) => b.status === "collected").length;
+  const washingCount = rows.filter((b) => b.status === "washing").length;
+  const outForDeliveryCount = rows.filter((b) => b.status === "out_for_delivery").length;
   const active = rows.filter((b) =>
     ["confirmed", "collected", "washing", "out_for_delivery"].includes(b.status)
   );
   const history = rows
     .filter((b) => b.status === "delivered" || b.status === "cancelled")
     .slice(0, 10);
+
+  const paidDelivered = rows.filter(
+    (b) => b.status === "delivered" && b.payment_status === "paid"
+  );
+  const allTimeEarnings = paidDelivered.reduce((sum, b) => sum + (b.price_estimate ?? 0), 0);
+
+  const { start, end } = istDayRange(selectedDate);
+  const dayEarnings = paidDelivered
+    .filter((b) => {
+      if (!b.delivered_at) return false;
+      const d = new Date(b.delivered_at);
+      return d >= start && d < end;
+    })
+    .reduce((sum, b) => sum + (b.price_estimate ?? 0), 0);
+
+  const isToday = selectedDate === todayIST();
 
   return (
     <div className="mx-auto max-w-md px-4 py-8 space-y-8">
@@ -273,6 +315,53 @@ export default async function WorkerDashboardPage() {
           </button>
         </form>
       </div>
+
+      <section className="grid grid-cols-2 gap-2">
+        <div className="card p-3 text-center">
+          <p className="text-2xl font-bold">{pending.length}</p>
+          <p className="text-xs text-neutral-500">New requests</p>
+        </div>
+        <div className="card p-3 text-center">
+          <p className="text-2xl font-bold">{collectedCount}</p>
+          <p className="text-xs text-neutral-500">Collected</p>
+        </div>
+        <div className="card p-3 text-center">
+          <p className="text-2xl font-bold">{washingCount}</p>
+          <p className="text-xs text-neutral-500">Washing</p>
+        </div>
+        <div className="card p-3 text-center">
+          <p className="text-2xl font-bold">{outForDeliveryCount}</p>
+          <p className="text-xs text-neutral-500">Out for delivery</p>
+        </div>
+      </section>
+
+      <section className="card p-4 space-y-3">
+        <h2 className="font-semibold text-sm uppercase tracking-wide text-neutral-500">
+          Earnings
+        </h2>
+        <div className="flex items-center justify-between">
+          <span className="text-sm text-neutral-500">All-time</span>
+          <span className="text-xl font-bold">₹{allTimeEarnings}</span>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-sm text-neutral-500">
+            {isToday ? "Today" : selectedDate}
+          </span>
+          <span className="text-xl font-bold">₹{dayEarnings}</span>
+        </div>
+        <form className="flex items-center gap-2 pt-1" method="get">
+          <input
+            type="date"
+            name="date"
+            defaultValue={selectedDate}
+            max={todayIST()}
+            className="input flex-1 !py-1.5 text-sm"
+          />
+          <button type="submit" className="btn-outline text-sm !py-1.5">
+            View
+          </button>
+        </form>
+      </section>
 
       <section className="space-y-3">
         <h2 className="font-semibold text-sm uppercase tracking-wide text-neutral-500">

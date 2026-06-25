@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import StatusBadge from "@/components/StatusBadge";
 import ReviewForm from "@/components/ReviewForm";
-import { cancelBooking } from "@/app/actions";
+import { cancelBooking, confirmDelivery } from "@/app/actions";
 
 const STEPS = [
   "pending",
@@ -30,7 +30,7 @@ export default async function BookingDetailPage({
   const { data: booking } = await supabase
     .from("bookings")
     .select(
-      "id, status, is_instant, scheduled_at, address, notes, price_estimate, payment_method, payment_status, created_at, providers(full_name, phone), service_categories(name)"
+      "id, status, is_instant, scheduled_at, address, notes, price_estimate, payment_method, payment_status, customer_confirmed_at, created_at, providers(full_name, phone), service_categories(name)"
     )
     .eq("id", id)
     .single();
@@ -192,7 +192,22 @@ export default async function BookingDetailPage({
         </form>
       )}
 
-      {booking.status === "delivered" && !existingReview && (
+      {booking.status === "delivered" && !booking.customer_confirmed_at && (
+        <div className="card p-4 mt-6 text-center space-y-2">
+          <p className="font-semibold">Your order has been delivered</p>
+          <p className="text-sm text-neutral-500">
+            Please confirm you&apos;ve received your items so we can close out this order.
+            If you don&apos;t confirm, it will auto-confirm in 48 hours.
+          </p>
+          <form action={confirmDelivery.bind(null, booking.id)}>
+            <button type="submit" className="btn-primary">
+              Confirm I received my order
+            </button>
+          </form>
+        </div>
+      )}
+
+      {booking.status === "delivered" && booking.customer_confirmed_at && !existingReview && (
         <ReviewForm bookingId={booking.id} />
       )}
     </div>
