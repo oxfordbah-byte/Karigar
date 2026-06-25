@@ -27,7 +27,7 @@ function normalizeIndianPhone(raw: string): string | null {
 }
 
 function phoneToAuthEmail(nationalNumber: string): string {
-  return `91${nationalNumber}@phone.karigar.app`;
+  return `91${nationalNumber}@phone.karigar.in`;
 }
 
 export async function signUp(
