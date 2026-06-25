@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import "@/app/globals.css";
 import Header from "@/components/Header";
 
@@ -22,6 +23,11 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
               </a>
             </span>
             <span className="text-neutral-400 text-xs">Built with Supabase + Vercel</span>
+            <span className="text-xs mt-1">
+              <Link href="/privacy" className="underline">Privacy Policy</Link>
+              {" · "}
+              <Link href="/delete-account" className="underline">Delete my account</Link>
+            </span>
           </div>
         </footer>
       </body>

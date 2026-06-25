@@ -18,6 +18,7 @@ export default async function Header() {
           {user ? (
             <>
               <Link href="/bookings" className="hover:underline">My Bookings</Link>
+              <Link href="/account" className="hover:underline">Account</Link>
               <form action={signOut}>
                 <button type="submit" className="btn-outline !py-2 !px-3 text-sm">Sign out</button>
               </form>

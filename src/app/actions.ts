@@ -294,3 +294,19 @@ export async function confirmDelivery(bookingId: string) {
 
   revalidatePath(`/bookings/${bookingId}`);
 }
+
+export async function deleteAccount() {
+  const supabase = await createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) {
+    redirect("/login");
+  }
+
+  const { error } = await supabase.rpc("delete_own_account");
+  await supabase.auth.signOut();
+
+  if (error) {
+    redirect("/delete-account?error=1");
+  }
+  redirect("/?deleted=1");
+}
