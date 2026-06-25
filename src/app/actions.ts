@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { normalizeIndianPhone, phoneToAuthEmail } from "@/lib/phone";
 
-export type ActionResult = { error?: string };
+export type ActionResult = { error?: string; success?: boolean };
 
 export async function signUp(
   _prevState: ActionResult,
@@ -228,4 +228,52 @@ export async function cancelBooking(bookingId: string) {
 
   revalidatePath(`/bookings/${bookingId}`);
   revalidatePath("/bookings");
+}
+
+export async function submitReview(
+  _prevState: ActionResult,
+  formData: FormData
+): Promise<ActionResult> {
+  const supabase = await createClient();
+
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) {
+    redirect("/login");
+  }
+
+  const bookingId = String(formData.get("booking_id") || "");
+  const rating = Number(formData.get("rating") || 0);
+  const comment = String(formData.get("comment") || "").trim();
+
+  if (rating < 1 || rating > 5) {
+    return { error: "Please choose a star rating between 1 and 5." };
+  }
+
+  const { data: booking } = await supabase
+    .from("bookings")
+    .select("id, provider_id, status, customer_id")
+    .eq("id", bookingId)
+    .single();
+
+  if (!booking || booking.customer_id !== userData.user.id || booking.status !== "delivered") {
+    return { error: "This booking can't be reviewed." };
+  }
+
+  const { error } = await supabase.from("reviews").insert({
+    booking_id: bookingId,
+    customer_id: userData.user.id,
+    provider_id: booking.provider_id,
+    rating,
+    comment: comment || null,
+  });
+
+  if (error) {
+    if (error.message.toLowerCase().includes("duplicate")) {
+      return { error: "You've already reviewed this booking." };
+    }
+    return { error: error.message };
+  }
+
+  revalidatePath(`/bookings/${bookingId}`);
+  return { success: true };
 }

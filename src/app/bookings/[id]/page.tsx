@@ -2,9 +2,17 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import StatusBadge from "@/components/StatusBadge";
+import ReviewForm from "@/components/ReviewForm";
 import { cancelBooking } from "@/app/actions";
 
-const STEPS = ["pending", "confirmed", "in_progress", "completed"] as const;
+const STEPS = [
+  "pending",
+  "confirmed",
+  "collected",
+  "washing",
+  "out_for_delivery",
+  "delivered",
+] as const;
 
 export default async function BookingDetailPage({
   params,
@@ -22,7 +30,7 @@ export default async function BookingDetailPage({
   const { data: booking } = await supabase
     .from("bookings")
     .select(
-      "id, status, is_instant, scheduled_at, address, notes, price_estimate, payment_method, created_at, providers(full_name, phone), service_categories(name)"
+      "id, status, is_instant, scheduled_at, address, notes, price_estimate, payment_method, payment_status, created_at, providers(full_name, phone), service_categories(name)"
     )
     .eq("id", id)
     .single();
@@ -30,6 +38,12 @@ export default async function BookingDetailPage({
   if (!booking) {
     notFound();
   }
+
+  const { data: existingReview } = await supabase
+    .from("reviews")
+    .select("id")
+    .eq("booking_id", id)
+    .maybeSingle();
 
   const { data: history } = await supabase
     .from("booking_status_history")
@@ -135,6 +149,8 @@ export default async function BookingDetailPage({
           <div>
             <span className="text-neutral-500">Payment: </span>
             {booking.payment_method === "cod" ? "Cash on Delivery" : "Online"}
+            {" · "}
+            {booking.payment_status === "paid" ? "Paid" : "Pending"}
           </div>
         )}
         <div>
@@ -168,12 +184,16 @@ export default async function BookingDetailPage({
         ))}
       </ul>
 
-      {!isCancelled && booking.status === "pending" && (
+      {!isCancelled && (booking.status === "pending" || booking.status === "confirmed") && (
         <form action={cancelBooking.bind(null, booking.id)} className="mt-6">
           <button type="submit" className="btn-outline">
             Cancel booking
           </button>
         </form>
+      )}
+
+      {booking.status === "delivered" && !existingReview && (
+        <ReviewForm bookingId={booking.id} />
       )}
     </div>
   );

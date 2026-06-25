@@ -1,16 +1,33 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { updateBookingStatus, workerSignOut } from "@/app/worker/actions";
+import {
+  confirmItemsCollected,
+  markDelivered,
+  updateBookingStatus,
+  workerSignOut,
+} from "@/app/worker/actions";
+
+type BookingStatus =
+  | "pending"
+  | "confirmed"
+  | "collected"
+  | "washing"
+  | "out_for_delivery"
+  | "delivered"
+  | "in_progress"
+  | "completed"
+  | "cancelled";
 
 type BookingRow = {
   id: string;
-  status: "pending" | "confirmed" | "in_progress" | "completed" | "cancelled";
+  status: BookingStatus;
   is_instant: boolean;
   scheduled_at: string | null;
   address: string;
   notes: string | null;
   price_estimate: number | null;
   payment_method: string;
+  payment_status: string;
   created_at: string;
   customer: { full_name: string | null; phone: string | null } | null;
   category: { name: string } | null;
@@ -20,9 +37,27 @@ type BookingRow = {
 const STATUS_LABEL: Record<string, string> = {
   pending: "New request",
   confirmed: "Accepted",
+  collected: "Collected",
+  washing: "Washing",
+  out_for_delivery: "Out for delivery",
+  delivered: "Delivered",
   in_progress: "In progress",
   completed: "Completed",
   cancelled: "Cancelled",
+};
+
+const ITEM_LABELS: Record<string, string> = {
+  shirt: "Shirt",
+  pant: "Pant / Trouser",
+  kurta: "Kurta / Shalwar Kameez",
+  saree: "Saree",
+  jacket: "Jacket / Coat",
+  bedsheet: "Bedsheet",
+  blanket: "Blanket / Quilt",
+  curtain: "Curtain",
+  shoe: "Shoes",
+  towel: "Towel",
+  other: "Other",
 };
 
 function BookingCard({ booking }: { booking: BookingRow }) {
@@ -53,11 +88,11 @@ function BookingCard({ booking }: { booking: BookingRow }) {
       <p className="text-sm text-neutral-600">{booking.address}</p>
       {booking.notes && <p className="text-sm text-neutral-500">Note: {booking.notes}</p>}
 
-      {booking.booking_items.length > 0 && (
+      {booking.status !== "confirmed" && booking.booking_items.length > 0 && (
         <ul className="text-sm text-neutral-600 list-disc pl-5">
           {booking.booking_items.map((it, i) => (
             <li key={i}>
-              {it.item_type} × {it.quantity}
+              {ITEM_LABELS[it.item_type] ?? it.item_type} × {it.quantity}
             </li>
           ))}
         </ul>
@@ -68,60 +103,118 @@ function BookingCard({ booking }: { booking: BookingRow }) {
           {booking.price_estimate != null ? `₹${booking.price_estimate}` : "—"}
           <span className="text-xs text-neutral-500 font-normal">
             {" "}
-            · {booking.payment_method === "online" ? "Online" : "Cash on delivery"}
+            ·{" "}
+            {booking.payment_method === "online"
+              ? "Online"
+              : booking.payment_status === "paid"
+                ? "Cash collected"
+                : "Cash on delivery"}
           </span>
         </span>
       </div>
 
-      {(booking.status === "pending" ||
-        booking.status === "confirmed" ||
-        booking.status === "in_progress") && (
+      {booking.status === "pending" && (
         <div className="flex gap-2 pt-2">
-          {booking.status === "pending" && (
-            <>
-              <form action={updateBookingStatus}>
-                <input type="hidden" name="booking_id" value={booking.id} />
-                <input type="hidden" name="new_status" value="confirmed" />
-                <button type="submit" className="btn-primary">
-                  Accept
-                </button>
-              </form>
-              <form action={updateBookingStatus}>
-                <input type="hidden" name="booking_id" value={booking.id} />
-                <input type="hidden" name="new_status" value="cancelled" />
-                <button type="submit" className="btn-outline">
-                  Decline
-                </button>
-              </form>
-            </>
+          <form action={updateBookingStatus}>
+            <input type="hidden" name="booking_id" value={booking.id} />
+            <input type="hidden" name="new_status" value="confirmed" />
+            <button type="submit" className="btn-primary">
+              Accept
+            </button>
+          </form>
+          <form action={updateBookingStatus}>
+            <input type="hidden" name="booking_id" value={booking.id} />
+            <input type="hidden" name="new_status" value="cancelled" />
+            <button type="submit" className="btn-outline">
+              Decline
+            </button>
+          </form>
+        </div>
+      )}
+
+      {booking.status === "confirmed" && (
+        <form action={confirmItemsCollected} className="pt-2 space-y-2 border-t border-[#f0d8db] mt-2">
+          <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wide pt-2">
+            Confirm items collected
+          </p>
+          {booking.booking_items.length === 0 ? (
+            <p className="text-sm text-neutral-400">No items on this order.</p>
+          ) : (
+            booking.booking_items.map((it) => (
+              <div key={it.item_type} className="flex items-center justify-between gap-2">
+                <label className="text-sm">{ITEM_LABELS[it.item_type] ?? it.item_type}</label>
+                <input
+                  type="number"
+                  min={0}
+                  name={`qty_${it.item_type}`}
+                  defaultValue={it.quantity}
+                  className="input w-20 text-center"
+                />
+              </div>
+            ))
           )}
-          {booking.status === "confirmed" && (
-            <>
-              <form action={updateBookingStatus}>
-                <input type="hidden" name="booking_id" value={booking.id} />
-                <input type="hidden" name="new_status" value="in_progress" />
-                <button type="submit" className="btn-primary">
-                  Start job
-                </button>
-              </form>
-              <form action={updateBookingStatus}>
-                <input type="hidden" name="booking_id" value={booking.id} />
-                <input type="hidden" name="new_status" value="cancelled" />
-                <button type="submit" className="btn-outline">
-                  Cancel
-                </button>
-              </form>
-            </>
+          <input type="hidden" name="booking_id" value={booking.id} />
+          <div className="flex gap-2 pt-1">
+            <button type="submit" className="btn-primary">
+              Confirm items collected
+            </button>
+            <button
+              type="submit"
+              formAction={updateBookingStatus}
+              name="new_status"
+              value="cancelled"
+              className="btn-outline"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      )}
+
+      {booking.status === "collected" && (
+        <div className="flex gap-2 pt-2">
+          <form action={updateBookingStatus}>
+            <input type="hidden" name="booking_id" value={booking.id} />
+            <input type="hidden" name="new_status" value="washing" />
+            <button type="submit" className="btn-primary">
+              Sent for washing
+            </button>
+          </form>
+          <form action={updateBookingStatus}>
+            <input type="hidden" name="booking_id" value={booking.id} />
+            <input type="hidden" name="new_status" value="cancelled" />
+            <button type="submit" className="btn-outline">
+              Cancel
+            </button>
+          </form>
+        </div>
+      )}
+
+      {booking.status === "washing" && (
+        <div className="flex gap-2 pt-2">
+          <form action={updateBookingStatus}>
+            <input type="hidden" name="booking_id" value={booking.id} />
+            <input type="hidden" name="new_status" value="out_for_delivery" />
+            <button type="submit" className="btn-primary">
+              Out for delivery
+            </button>
+          </form>
+        </div>
+      )}
+
+      {booking.status === "out_for_delivery" && (
+        <div className="pt-2">
+          {booking.payment_method === "cod" && (
+            <p className="text-xs text-neutral-500 pb-1">
+              Collect ₹{booking.price_estimate} cash on delivery before confirming.
+            </p>
           )}
-          {booking.status === "in_progress" && (
-            <form action={updateBookingStatus}>
-              <input type="hidden" name="booking_id" value={booking.id} />
-              <input type="hidden" name="new_status" value="completed" />
-              <button type="submit" className="btn-primary">
-                Mark completed
-              </button>
-            </form>
-          )}
+          <form action={markDelivered}>
+            <input type="hidden" name="booking_id" value={booking.id} />
+            <button type="submit" className="btn-primary">
+              {booking.payment_method === "cod" ? "Mark delivered & payment received" : "Mark delivered"}
+            </button>
+          </form>
         </div>
       )}
     </div>
@@ -149,7 +242,7 @@ export default async function WorkerDashboardPage() {
   const { data: bookings } = await supabase
     .from("bookings")
     .select(
-      `id, status, is_instant, scheduled_at, address, notes, price_estimate, payment_method, created_at,
+      `id, status, is_instant, scheduled_at, address, notes, price_estimate, payment_method, payment_status, created_at,
        customer:profiles(full_name, phone),
        category:service_categories(name),
        booking_items(item_type, quantity)`
@@ -160,9 +253,11 @@ export default async function WorkerDashboardPage() {
 
   const rows = bookings ?? [];
   const pending = rows.filter((b) => b.status === "pending");
-  const active = rows.filter((b) => b.status === "confirmed" || b.status === "in_progress");
+  const active = rows.filter((b) =>
+    ["confirmed", "collected", "washing", "out_for_delivery"].includes(b.status)
+  );
   const history = rows
-    .filter((b) => b.status === "completed" || b.status === "cancelled")
+    .filter((b) => b.status === "delivered" || b.status === "cancelled")
     .slice(0, 10);
 
   return (
