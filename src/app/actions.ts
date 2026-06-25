@@ -3,32 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { normalizeIndianPhone, phoneToAuthEmail } from "@/lib/phone";
 
 export type ActionResult = { error?: string };
-
-// Karigar uses mobile-number login instead of email. Supabase Auth's
-// password-based flow still needs an "email" under the hood, so we derive a
-// stable, hidden one from the normalized Indian mobile number. The real
-// phone number (e.g. "+919876543210") is kept in user_metadata for display.
-function normalizeIndianPhone(raw: string): string | null {
-  const digits = raw.replace(/\D/g, "");
-  let national: string;
-  if (digits.length === 12 && digits.startsWith("91")) {
-    national = digits.slice(2);
-  } else if (digits.length === 11 && digits.startsWith("0")) {
-    national = digits.slice(1);
-  } else if (digits.length === 10) {
-    national = digits;
-  } else {
-    return null;
-  }
-  if (!/^[6-9]\d{9}$/.test(national)) return null;
-  return national;
-}
-
-function phoneToAuthEmail(nationalNumber: string): string {
-  return `91${nationalNumber}@phone.karigar.in`;
-}
 
 export async function signUp(
   _prevState: ActionResult,
