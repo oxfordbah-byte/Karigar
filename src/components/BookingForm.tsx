@@ -158,7 +158,7 @@ export default function BookingForm({
                       <div>
                         <div className="text-sm font-medium">{t.label}</div>
                         <div className="text-xs text-neutral-400">
-                          PKR {prices[t.value] ?? 0} / piece
+                          ₹{prices[t.value] ?? 0} / piece
                         </div>
                       </div>
                       <div className="flex items-center gap-3">
@@ -182,7 +182,7 @@ export default function BookingForm({
                           </button>
                         </div>
                         <span className="text-xs text-neutral-500 w-16 text-right shrink-0">
-                          {qty > 0 ? `PKR ${lineTotal}` : ""}
+                          {qty > 0 ? `₹${lineTotal}` : ""}
                         </span>
                       </div>
                     </div>
@@ -192,7 +192,7 @@ export default function BookingForm({
               {selectedItems.length > 0 && (
                 <div className="flex items-center justify-between mt-3 px-1 font-semibold text-sm">
                   <span>Total ({totalPieces} items)</span>
-                  <span className="text-[#d21f3c]">PKR {total}</span>
+                  <span className="text-[#d21f3c]">₹{total}</span>
                 </div>
               )}
             </div>
@@ -253,12 +253,12 @@ export default function BookingForm({
                     <span>
                       {it.quantity}x {it.label}
                     </span>
-                    <span>PKR {(prices[it.value] ?? 0) * it.quantity}</span>
+                    <span>₹{(prices[it.value] ?? 0) * it.quantity}</span>
                   </div>
                 ))}
                 <div className="border-t border-[#f0d8db] pt-2 flex justify-between font-semibold">
                   <span>Total</span>
-                  <span className="text-[#d21f3c]">PKR {total}</span>
+                  <span className="text-[#d21f3c]">₹{total}</span>
                 </div>
               </div>
             )}
@@ -266,7 +266,7 @@ export default function BookingForm({
             {!isLaundry && priceEstimate ? (
               <div className="flex justify-between font-semibold">
                 <span>Estimated price</span>
-                <span className="text-[#d21f3c]">PKR {priceEstimate}</span>
+                <span className="text-[#d21f3c]">₹{priceEstimate}</span>
               </div>
             ) : null}
 

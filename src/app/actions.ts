@@ -6,6 +6,30 @@ import { createClient } from "@/lib/supabase/server";
 
 export type ActionResult = { error?: string };
 
+// Karigar uses mobile-number login instead of email. Supabase Auth's
+// password-based flow still needs an "email" under the hood, so we derive a
+// stable, hidden one from the normalized Indian mobile number. The real
+// phone number (e.g. "+919876543210") is kept in user_metadata for display.
+function normalizeIndianPhone(raw: string): string | null {
+  const digits = raw.replace(/\D/g, "");
+  let national: string;
+  if (digits.length === 12 && digits.startsWith("91")) {
+    national = digits.slice(2);
+  } else if (digits.length === 11 && digits.startsWith("0")) {
+    national = digits.slice(1);
+  } else if (digits.length === 10) {
+    national = digits;
+  } else {
+    return null;
+  }
+  if (!/^[6-9]\d{9}$/.test(national)) return null;
+  return national;
+}
+
+function phoneToAuthEmail(nationalNumber: string): string {
+  return `91${nationalNumber}@phone.karigar.app`;
+}
+
 export async function signUp(
   _prevState: ActionResult,
   formData: FormData
@@ -13,19 +37,30 @@ export async function signUp(
   const supabase = await createClient();
 
   const fullName = String(formData.get("full_name") || "");
-  const phone = String(formData.get("phone") || "");
-  const email = String(formData.get("email") || "");
+  const phoneRaw = String(formData.get("phone") || "");
   const password = String(formData.get("password") || "");
 
+  const national = normalizeIndianPhone(phoneRaw);
+  if (!national) {
+    return { error: "Enter a valid 10-digit Indian mobile number." };
+  }
+  const authEmail = phoneToAuthEmail(national);
+  const displayPhone = `+91${national}`;
+
   const { error } = await supabase.auth.signUp({
-    email,
+    email: authEmail,
     password,
     options: {
-      data: { full_name: fullName, phone },
+      data: { full_name: fullName, phone: displayPhone },
     },
   });
 
   if (error) {
+    if (error.message.toLowerCase().includes("already registered")) {
+      return {
+        error: "This mobile number is already registered. Try logging in instead.",
+      };
+    }
     return { error: error.message };
   }
 
@@ -38,13 +73,22 @@ export async function signIn(
 ): Promise<ActionResult> {
   const supabase = await createClient();
 
-  const email = String(formData.get("email") || "");
+  const phoneRaw = String(formData.get("phone") || "");
   const password = String(formData.get("password") || "");
 
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const national = normalizeIndianPhone(phoneRaw);
+  if (!national) {
+    return { error: "Enter a valid 10-digit Indian mobile number." };
+  }
+  const authEmail = phoneToAuthEmail(national);
+
+  const { error } = await supabase.auth.signInWithPassword({
+    email: authEmail,
+    password,
+  });
 
   if (error) {
-    return { error: error.message };
+    return { error: "Incorrect mobile number or password." };
   }
 
   redirect("/");

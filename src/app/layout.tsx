@@ -21,8 +21,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           <div className="flex flex-col items-center gap-1">
             <span>
               Customer care:{" "}
-              <a href="tel:+923001234567" className="font-semibold text-[#d21f3c] hover:underline">
-                +92 300 1234567
+              <a href="tel:+919876543210" className="font-semibold text-[#d21f3c] hover:underline">
+                +91 98765 43210
               </a>
             </span>
             <span className="text-neutral-400 text-xs">Built with Supabase + Vercel</span>

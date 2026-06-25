@@ -128,7 +128,7 @@ export default async function BookingDetailPage({
         {booking.price_estimate && (
           <div>
             <span className="text-neutral-500">Total: </span>
-            PKR {booking.price_estimate}
+            ₹{booking.price_estimate}
           </div>
         )}
         {booking.payment_method && (

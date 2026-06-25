@@ -17,36 +17,26 @@ export default function AuthForm({
   return (
     <form action={formAction} className="space-y-4">
       {mode === "signup" && (
-        <>
-          <div>
-            <label className="block text-sm font-medium mb-1">Full name</label>
-            <input
-              name="full_name"
-              required
-              className="input"
-              placeholder="Your full name"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Phone</label>
-            <input
-              name="phone"
-              type="tel"
-              required
-              className="input"
-              placeholder="+92 3xx xxxxxxx"
-            />
-          </div>
-        </>
+        <div>
+          <label className="block text-sm font-medium mb-1">Full name</label>
+          <input
+            name="full_name"
+            required
+            className="input"
+            placeholder="Your full name"
+          />
+        </div>
       )}
       <div>
-        <label className="block text-sm font-medium mb-1">Email</label>
+        <label className="block text-sm font-medium mb-1">Mobile number</label>
         <input
-          name="email"
-          type="email"
+          name="phone"
+          type="tel"
           required
+          inputMode="numeric"
+          autoComplete="tel"
           className="input"
-          placeholder="you@example.com"
+          placeholder="+91 98xxx xxxxx"
         />
       </div>
       <div>

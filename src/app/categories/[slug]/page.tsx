@@ -57,7 +57,7 @@ export default async function CategoryPage({
               )}
               {p.starting_price && (
                 <div className="text-sm font-medium mt-1">
-                  Starting at PKR {p.starting_price}
+                  Starting at ₹{p.starting_price}
                 </div>
               )}
             </div>
