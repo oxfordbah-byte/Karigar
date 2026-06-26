@@ -40,7 +40,7 @@ export async function workerSignIn(
 
   if (!provider) {
     await supabase.auth.signOut();
-    return { error: "This account isn't set up as a worker. Contact Karigar support." };
+    return { error: "This account isn't set up as a worker. Contact Pani Undo support." };
   }
 
   redirect("/worker/dashboard");

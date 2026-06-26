@@ -15,7 +15,7 @@ export default async function Home() {
       <section className="bg-[#d21f3c] text-white">
         <div className="mx-auto max-w-5xl px-4 py-16 text-center">
           <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
-            Karigar — Your Home Services Directory
+            Pani Undo — Your Home Services Directory
           </h1>
           <div className="mt-3 text-white/90 max-w-xl mx-auto space-y-1">
             <p>Find trusted, verified professionals for everything your home needs.</p>

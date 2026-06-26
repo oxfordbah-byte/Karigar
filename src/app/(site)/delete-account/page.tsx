@@ -7,7 +7,7 @@ export default function DeleteAccountInfoPage({
 }) {
   return (
     <div className="mx-auto max-w-2xl px-4 py-10">
-      <h1 className="text-2xl font-bold mb-4">Delete your Karigar account</h1>
+      <h1 className="text-2xl font-bold mb-4">Delete your Pani Undo account</h1>
 
       {searchParams.error && (
         <div className="mb-4 rounded-md bg-red-50 border border-red-200 text-red-700 text-sm p-3">
@@ -17,7 +17,7 @@ export default function DeleteAccountInfoPage({
       )}
 
       <p className="text-neutral-700 mb-4">
-        You can request deletion of your Karigar account and personal data at
+        You can request deletion of your Pani Undo account and personal data at
         any time, whether or not you have the app installed.
       </p>
 

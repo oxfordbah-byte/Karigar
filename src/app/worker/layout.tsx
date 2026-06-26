@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "@/app/globals.css";
 
 export const metadata: Metadata = {
-  title: "Karigar Worker",
-  description: "View and manage your Karigar jobs.",
+  title: "Pani Undo Worker",
+  description: "View and manage your Pani Undo jobs.",
 };
 
 export default function WorkerRootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -13,7 +13,7 @@ export default function WorkerRootLayout({ children }: Readonly<{ children: Reac
         <header className="sticky top-0 z-20 bg-white border-b-2 border-[#d21f3c]">
           <div className="mx-auto max-w-md flex items-center justify-between px-4 py-3">
             <span className="text-lg font-extrabold tracking-tight text-[#d21f3c]">
-              KARIGAR <span className="text-neutral-400 font-medium text-sm">Worker</span>
+              PANI UNDO <span className="text-neutral-400 font-medium text-sm">Worker</span>
             </span>
           </div>
         </header>

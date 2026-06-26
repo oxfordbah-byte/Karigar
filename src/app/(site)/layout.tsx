@@ -4,7 +4,7 @@ import "@/app/globals.css";
 import Header from "@/components/Header";
 
 export const metadata: Metadata = {
-  title: "Karigar — Laundry Wash & Ironing, Pickup & Drop-off",
+  title: "Pani Undo — Laundry Wash & Ironing, Pickup & Drop-off",
   description: "Book trusted laundry wash & ironing with free pickup and drop-off. More home services coming soon.",
 };
 

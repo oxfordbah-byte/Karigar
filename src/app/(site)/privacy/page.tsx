@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 export const metadata = {
-  title: "Privacy Policy — Karigar",
+  title: "Privacy Policy — Pani Undo",
 };
 
 export default function PrivacyPage() {
@@ -11,7 +11,7 @@ export default function PrivacyPage() {
       <p className="text-sm text-neutral-500 mb-6">Last updated: 25 June 2026</p>
 
       <p className="text-neutral-700 mb-4">
-        Karigar (&quot;we&quot;, &quot;us&quot;) operates the Karigar home
+        Pani Undo (&quot;we&quot;, &quot;us&quot;) operates the Pani Undo home
         services booking app, based in Kerala, India. This policy explains
         what information we collect, how we use it, and your rights.
       </p>

@@ -1,4 +1,4 @@
-// Karigar uses mobile-number login instead of email, for both customers and
+// Pani Undo uses mobile-number login instead of email, for both customers and
 // workers. Supabase Auth's password-based flow still needs an "email" under
 // the hood, so we derive a stable, hidden one from the normalized Indian
 // mobile number. The real phone number is kept in user_metadata for display.
@@ -22,9 +22,9 @@ export function normalizeIndianPhone(raw: string): string | null {
 }
 
 export function phoneToAuthEmail(nationalNumber: string): string {
-  return `91${nationalNumber}@phone.karigar.in`;
+  return `91${nationalNumber}@phone.paniundo.in`;
 }
 
 export function phoneToWorkerAuthEmail(nationalNumber: string): string {
-  return `91${nationalNumber}@worker.karigar.in`;
+  return `91${nationalNumber}@worker.paniundo.in`;
 }

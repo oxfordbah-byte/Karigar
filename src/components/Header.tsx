@@ -11,7 +11,7 @@ export default async function Header() {
     <header className="sticky top-0 z-20 bg-white border-b-2 border-[#d21f3c]">
       <div className="mx-auto max-w-5xl flex items-center justify-between px-4 py-4">
         <Link href="/" className="text-xl font-extrabold tracking-tight text-[#d21f3c]">
-          KARIGAR
+          PANI UNDO
         </Link>
         <nav className="flex items-center gap-4 text-sm font-medium">
           <Link href="/" className="hover:underline">Services</Link>
