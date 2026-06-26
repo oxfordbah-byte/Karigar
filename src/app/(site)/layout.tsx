@@ -24,6 +24,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             </span>
             <span className="text-neutral-400 text-xs">Built with Supabase + Vercel</span>
             <span className="text-xs mt-1">
+              <Link href="/track" className="underline">Track order</Link>
+              {" · "}
               <Link href="/privacy" className="underline">Privacy Policy</Link>
               {" · "}
               <Link href="/delete-account" className="underline">Delete my account</Link>

@@ -30,7 +30,7 @@ export default async function BookingDetailPage({
   const { data: booking } = await supabase
     .from("bookings")
     .select(
-      "id, status, is_instant, scheduled_at, address, notes, price_estimate, payment_method, payment_status, customer_confirmed_at, created_at, providers(full_name, phone), service_categories(name)"
+      "id, status, is_instant, scheduled_at, address, notes, price_estimate, payment_method, payment_status, customer_confirmed_at, created_at, tracking_code, providers(full_name, phone), service_categories(name)"
     )
     .eq("id", id)
     .single();
@@ -94,6 +94,21 @@ export default async function BookingDetailPage({
           {category?.name ?? "Service"} booking
         </h1>
         <StatusBadge status={booking.status} />
+      </div>
+
+      <div className="card p-3 mt-3 bg-[#fff7f7] border-[#e7c3c8] text-sm">
+        <span className="text-neutral-500">Tracking code: </span>
+        <span className="font-mono font-semibold text-[#d21f3c]">
+          {booking.tracking_code}
+        </span>
+        <p className="text-xs text-neutral-500 mt-1">
+          Save this code with your mobile number. You can check this order's
+          status anytime, from any device, at{" "}
+          <Link href="/track" className="underline">
+            /track
+          </Link>{" "}
+          — no login needed.
+        </p>
       </div>
 
       {!isCancelled && (

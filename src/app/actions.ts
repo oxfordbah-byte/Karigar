@@ -99,9 +99,7 @@ export async function createBooking(
   const supabase = await createClient();
 
   const { data: userData } = await supabase.auth.getUser();
-  if (!userData.user) {
-    redirect("/login");
-  }
+  let customerId = userData.user?.id;
 
   const providerId = String(formData.get("provider_id") || "");
   const categoryId = String(formData.get("category_id") || "");
@@ -156,6 +154,35 @@ export async function createBooking(
     }
   }
 
+  if (!customerId) {
+    const guestName = String(formData.get("guest_name") || "").trim();
+    const guestPhoneRaw = String(formData.get("guest_phone") || "");
+    const national = normalizeIndianPhone(guestPhoneRaw);
+
+    if (!guestName) {
+      return { error: "Your name is required." };
+    }
+    if (!national) {
+      return { error: "Please enter a valid 10-digit mobile number." };
+    }
+
+    const { data: anonData, error: anonError } =
+      await supabase.auth.signInAnonymously({
+        options: {
+          data: { full_name: guestName, phone: `+91${national}` },
+        },
+      });
+
+    if (anonError || !anonData.user) {
+      return {
+        error:
+          anonError?.message ||
+          "Couldn't start a guest booking. Please try again.",
+      };
+    }
+    customerId = anonData.user.id;
+  }
+
   // Recompute the total server-side from the authoritative price list —
   // never trust a client-submitted total.
   let priceEstimate = clientPriceEstimate;
@@ -178,7 +205,7 @@ export async function createBooking(
   const { data: booking, error } = await supabase
     .from("bookings")
     .insert({
-      customer_id: userData.user.id,
+      customer_id: customerId,
       provider_id: providerId,
       category_id: categoryId,
       address,
@@ -309,4 +336,56 @@ export async function deleteAccount() {
     redirect("/delete-account?error=1");
   }
   redirect("/?deleted=1");
+}
+
+export type TrackBookingResult = {
+  id: string;
+  status: string;
+  is_instant: boolean;
+  scheduled_at: string | null;
+  created_at: string;
+  delivered_at: string | null;
+  payment_status: string;
+  payment_method: string;
+  price_estimate: number | null;
+  provider_name: string;
+  category_name: string;
+};
+
+export type TrackActionResult = {
+  error?: string;
+  result?: TrackBookingResult;
+};
+
+export async function trackBooking(
+  _prevState: TrackActionResult,
+  formData: FormData
+): Promise<TrackActionResult> {
+  const supabase = await createClient();
+
+  const code = String(formData.get("code") || "").trim();
+  const phone = String(formData.get("phone") || "").trim();
+
+  if (!code || !phone) {
+    return { error: "Enter both your tracking code and mobile number." };
+  }
+
+  const { data, error } = await supabase.rpc("track_booking_by_code", {
+    p_code: code,
+    p_phone: phone,
+  });
+
+  if (error) {
+    return { error: "Something went wrong. Please try again." };
+  }
+
+  const row = Array.isArray(data) ? data[0] : null;
+  if (!row) {
+    return {
+      error:
+        "No booking found for that code and mobile number. Double-check both and try again.",
+    };
+  }
+
+  return { result: row as TrackBookingResult };
 }

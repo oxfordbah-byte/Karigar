@@ -23,12 +23,14 @@ export default function BookingForm({
   categorySlug,
   priceEstimate,
   itemPrices,
+  isGuest,
 }: {
   providerId: string;
   categoryId: string;
   categorySlug?: string | null;
   priceEstimate?: number | null;
   itemPrices?: Record<string, number>;
+  isGuest?: boolean;
 }) {
   const [state, formAction, pending] = useActionState<ActionResult, FormData>(
     createBooking,
@@ -42,6 +44,8 @@ export default function BookingForm({
   const [address, setAddress] = useState("");
   const [notes, setNotes] = useState("");
   const [scheduledAt, setScheduledAt] = useState("");
+  const [guestName, setGuestName] = useState("");
+  const [guestPhone, setGuestPhone] = useState("");
 
   const prices = itemPrices ?? {};
 
@@ -61,6 +65,14 @@ export default function BookingForm({
   const totalPieces = selectedItems.reduce((n, it) => n + it.quantity, 0);
 
   function goToReview() {
+    if (isGuest && !guestName.trim()) {
+      setFormError("Your name is required.");
+      return;
+    }
+    if (isGuest && !/^[6-9]\d{9}$/.test(guestPhone.replace(/\D/g, "").slice(-10))) {
+      setFormError("Please enter a valid 10-digit mobile number.");
+      return;
+    }
     if (!address.trim()) {
       setFormError("Address is required.");
       return;
@@ -88,6 +100,12 @@ export default function BookingForm({
       )}
       <input type="hidden" name="address" value={address} />
       <input type="hidden" name="notes" value={notes} />
+      {isGuest && (
+        <>
+          <input type="hidden" name="guest_name" value={guestName} />
+          <input type="hidden" name="guest_phone" value={guestPhone} />
+        </>
+      )}
       {isLaundry && (
         <input
           type="hidden"
@@ -110,6 +128,40 @@ export default function BookingForm({
 
       {step === "details" && (
         <div className="space-y-4">
+          {isGuest && (
+            <div className="card p-3 space-y-3">
+              <p className="text-xs text-neutral-500">
+                Booking as a guest — no account needed. We just need your
+                name and number to confirm the order.
+              </p>
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Your name
+                </label>
+                <input
+                  type="text"
+                  value={guestName}
+                  onChange={(e) => setGuestName(e.target.value)}
+                  required
+                  className="input"
+                  placeholder="Full name"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Mobile number
+                </label>
+                <input
+                  type="tel"
+                  value={guestPhone}
+                  onChange={(e) => setGuestPhone(e.target.value)}
+                  required
+                  className="input"
+                  placeholder="10-digit mobile number"
+                />
+              </div>
+            </div>
+          )}
           <div>
             <label className="block text-sm font-medium mb-1">When?</label>
             <div className="flex gap-2">
@@ -271,6 +323,12 @@ export default function BookingForm({
             ) : null}
 
             <div className="pt-2 text-neutral-500 space-y-0.5">
+              {isGuest && (
+                <>
+                  <div>Name: {guestName}</div>
+                  <div>Phone: {guestPhone}</div>
+                </>
+              )}
               <div>Address: {address}</div>
               <div>
                 Timing:{" "}

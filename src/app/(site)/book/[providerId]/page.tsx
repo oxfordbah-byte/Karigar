@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import BookingForm from "@/components/BookingForm";
 
@@ -15,9 +15,7 @@ export default async function BookProviderPage({
   const supabase = await createClient();
 
   const { data: userData } = await supabase.auth.getUser();
-  if (!userData.user) {
-    redirect(`/login?next=/book/${providerId}`);
-  }
+  const isGuest = !userData.user;
 
   const { data: provider } = await supabase
     .from("providers")
@@ -64,6 +62,7 @@ export default async function BookProviderPage({
           categorySlug={category?.slug ?? null}
           priceEstimate={provider.starting_price}
           itemPrices={itemPrices}
+          isGuest={isGuest}
         />
       </div>
     </div>
